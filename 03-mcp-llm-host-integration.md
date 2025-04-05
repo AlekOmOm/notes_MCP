@@ -167,7 +167,7 @@ Thorough testing ensures reliable integration between MCP Servers and LLM Hosts.
 4. **Protocol Validation**
    Verify that all messages conform to the MCP specification.
 
-5. \*\*Debugging Instrumentationn
+5. **Debugging Instrumentation**
 
    ```javascript
    class DebugMCPClient extends MCPClient {
