@@ -1,6 +1,6 @@
 # 01. Model-Context-Protocol (MCP) 🔌
 
-[<- Back to Main Note](./README.md) | [Next: Implementation Guide ->](./02-implementation-guide.md)
+[<- Back to Main Note](./README.md) | [Next: MCP Tool Development (sub-note) ->](./01a-mcp-tool-development.md)
 
 ## Table of Contents
 
@@ -26,13 +26,15 @@ The fundamental goal of MCP is decoupling, comparable to USB for AI tools:
 ```javascript
 // Conceptual benefits of MCP decoupling
 const mcpBenefits = {
-  forLLMHosts: "Interact with various tools without knowing implementation details",
+  forLLMHosts:
+    "Interact with various tools without knowing implementation details",
   forToolDevelopers: "Create services usable by any MCP-compatible LLM host",
-  forUsers: "Seamless integration of diverse capabilities into AI interactions"
+  forUsers: "Seamless integration of diverse capabilities into AI interactions",
 };
 ```
 
 Key points to remember:
+
 - MCP standardizes communication protocols between LLMs and external resources
 - It creates clear interfaces for tool and context source integration
 - The protocol enables plug-and-play functionality across compatible systems
@@ -97,13 +99,13 @@ Central intermediary component that:
 
 The MCP Server contains several conceptual subcomponents:
 
-| Component | Function | Implementation Role |
-|----------|------|------|
-| Protocol Listener | Handles incoming connections from LLM Hosts | Core infrastructure |
-| Request Parser | Interprets MCP message formats | Core infrastructure |
-| Service Registry | Tracks available tools and generates discovery info | Core + custom tools |
-| Tool/Context Connectors | Links to specific tool implementations | Custom implementation |
-| Response Formatter | Packages results into MCP format | Core infrastructure |
+| Component               | Function                                            | Implementation Role   |
+| ----------------------- | --------------------------------------------------- | --------------------- |
+| Protocol Listener       | Handles incoming connections from LLM Hosts         | Core infrastructure   |
+| Request Parser          | Interprets MCP message formats                      | Core infrastructure   |
+| Service Registry        | Tracks available tools and generates discovery info | Core + custom tools   |
+| Tool/Context Connectors | Links to specific tool implementations              | Custom implementation |
+| Response Formatter      | Packages results into MCP format                    | Core infrastructure   |
 
 ### Tools / Context Sources
 
@@ -119,11 +121,12 @@ MCP communication follows a standard sequence of operations.
 ### Implementation Steps
 
 1. **Connection & Discovery**
+
    ```javascript
    // Pseudocode: Discovery request
    const discoveryRequest = {
      type: "mcp_discover",
-     version: "1.0"
+     version: "1.0",
    };
    ```
 
@@ -134,6 +137,7 @@ MCP communication follows a standard sequence of operations.
    LLM determines when to use a tool based on user request and available tools
 
 4. **Invocation Request**
+
    ```javascript
    // Pseudocode: Tool invocation
    const invokeRequest = {
@@ -141,8 +145,8 @@ MCP communication follows a standard sequence of operations.
      tool: "markdown_note_creator",
      arguments: {
        filename: "meeting-notes.md",
-       content: "# Meeting Notes\n\n- Discussion items..."
-     }
+       content: "# Meeting Notes\n\n- Discussion items...",
+     },
    };
    ```
 
@@ -183,32 +187,40 @@ class MarkdownNoteManager {
   constructor(baseDirectory) {
     this.baseDirectory = baseDirectory;
   }
-  
+
   async createNote(filename, content) {
     // Sanitize filename
     const safeName = this.sanitizeFilename(filename);
     const fullPath = path.join(this.baseDirectory, safeName);
-    
+
     // Write file
-    await fs.promises.writeFile(fullPath, content, 'utf8');
-    
+    await fs.promises.writeFile(fullPath, content, "utf8");
+
     return {
       status: "success",
       message: `Note created at ${fullPath}`,
-      path: fullPath
+      path: fullPath,
     };
   }
-  
+
   // Additional methods for note operations
-  async readNote(filename) { /* ... */ }
-  async searchNotes(query) { /* ... */ }
-  async listNotes() { /* ... */ }
-  
+  async readNote(filename) {
+    /* ... */
+  }
+  async searchNotes(query) {
+    /* ... */
+  }
+  async listNotes() {
+    /* ... */
+  }
+
   // Helper methods
-  sanitizeFilename(filename) { /* ... */ }
+  sanitizeFilename(filename) {
+    /* ... */
+  }
 }
 ```
 
 ---
 
-[<- Back to Main Note](./README.md) | [Next: Implementation Guide ->](./02-implementation-guide.md)
+[<- Back to Main Note](./README.md) | [Next: MCP Tool Development (sub-note) ->](./01a-mcp-tool-development.md)

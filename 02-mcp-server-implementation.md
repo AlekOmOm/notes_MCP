@@ -1,6 +1,6 @@
 # 02. Server Implementation 🖥️
 
-[<- Back to Main Note](./README.md) | [Next: Integration with LLM Hosts ->](./03-llm-host-integration.md)
+[<- Back: MCP Tool Development](./01a-mcp-tool-development.md) | [Next: Integration with LLM Hosts ->](./03-mcp-llm-host-integration.md)
 
 ## Table of Contents
 
@@ -26,12 +26,20 @@ class MCPServer {
     this.tools = new Map(); // Stores registered tools
     this.server = null; // HTTP/WebSocket server instance
   }
-  
+
   // Core functionality methods
-  start() { /* Initialize and start the server */ }
-  stop() { /* Gracefully shut down the server */ }
-  handleRequest(request) { /* Process incoming MCP requests */ }
-  registerTool(tool) { /* Register a new tool with the server */ }
+  start() {
+    /* Initialize and start the server */
+  }
+  stop() {
+    /* Gracefully shut down the server */
+  }
+  handleRequest(request) {
+    /* Process incoming MCP requests */
+  }
+  registerTool(tool) {
+    /* Register a new tool with the server */
+  }
 }
 ```
 
@@ -40,6 +48,7 @@ class MCPServer {
 MCP Servers typically implement one of two primary communication models:
 
 1. **REST API Model**
+
    - HTTP-based with JSON payloads
    - Stateless requests and responses
    - Simpler to implement but may have higher latency
@@ -50,6 +59,7 @@ MCP Servers typically implement one of two primary communication models:
    - More complex to implement but better for interactive usage
 
 Key points to remember:
+
 - Choose the communication model based on expected usage patterns
 - REST is simpler but WebSockets offer better performance for frequent interactions
 - Consider implementing both for maximum compatibility
@@ -67,7 +77,7 @@ const toolManifest = {
   server_info: {
     name: "Markdown Notes Manager",
     version: "1.0.0",
-    description: "MCP Server for managing markdown notes"
+    description: "MCP Server for managing markdown notes",
   },
   tools: [
     {
@@ -82,28 +92,28 @@ const toolManifest = {
             properties: {
               filename: {
                 type: "string",
-                description: "Name of the note file (will be sanitized)"
+                description: "Name of the note file (will be sanitized)",
               },
               content: {
                 type: "string",
-                description: "Markdown content for the note"
-              }
+                description: "Markdown content for the note",
+              },
             },
-            required: ["filename", "content"]
+            required: ["filename", "content"],
           },
           returns: {
             type: "object",
             properties: {
               status: { type: "string" },
               message: { type: "string" },
-              path: { type: "string" }
-            }
-          }
+              path: { type: "string" },
+            },
+          },
         },
         // Additional function definitions...
-      ]
-    }
-  ]
+      ],
+    },
+  ],
 };
 ```
 
@@ -114,40 +124,40 @@ const toolManifest = {
 function handleDiscoveryRequest(request, response) {
   // Generate the current tool manifest
   const manifest = generateToolManifest();
-  
+
   // Send the manifest as the response
   response.status(200).json({
     type: "mcp_discovery_response",
-    manifest: manifest
+    manifest: manifest,
   });
 }
 
 // Generate the tool manifest from registered tools
 function generateToolManifest() {
   const tools = [];
-  
+
   // Iterate through registered tools
   for (const [toolName, toolDefinition] of registeredTools.entries()) {
     tools.push({
       name: toolName,
       description: toolDefinition.description,
-      functions: toolDefinition.functions.map(func => ({
+      functions: toolDefinition.functions.map((func) => ({
         name: func.name,
         description: func.description,
         parameters: func.parameters,
-        returns: func.returns
-      }))
+        returns: func.returns,
+      })),
     });
   }
-  
+
   return {
     protocol_version: "1.0",
     server_info: {
       name: serverConfig.name,
       version: serverConfig.version,
-      description: serverConfig.description
+      description: serverConfig.description,
     },
-    tools: tools
+    tools: tools,
   };
 }
 ```
@@ -173,59 +183,64 @@ async function handleInvocationRequest(request, response) {
   try {
     // Extract request details
     const { tool, function: functionName, parameters } = request.body;
-    
+
     // Validate request
     if (!tool || !functionName) {
       return response.status(400).json({
         type: "mcp_invocation_error",
-        error: "Missing required fields 'tool' and/or 'function'"
+        error: "Missing required fields 'tool' and/or 'function'",
       });
     }
-    
+
     // Check if tool exists
     if (!registeredTools.has(tool)) {
       return response.status(404).json({
         type: "mcp_invocation_error",
-        error: `Tool '${tool}' not found`
+        error: `Tool '${tool}' not found`,
       });
     }
-    
+
     // Get tool definition
     const toolDefinition = registeredTools.get(tool);
-    
+
     // Find the requested function
-    const functionDef = toolDefinition.functions.find(f => f.name === functionName);
+    const functionDef = toolDefinition.functions.find(
+      (f) => f.name === functionName
+    );
     if (!functionDef) {
       return response.status(404).json({
         type: "mcp_invocation_error",
-        error: `Function '${functionName}' not found in tool '${tool}'`
+        error: `Function '${functionName}' not found in tool '${tool}'`,
       });
     }
-    
+
     // Validate parameters against schema
-    const validationResult = validateParameters(parameters, functionDef.parameters);
+    const validationResult = validateParameters(
+      parameters,
+      functionDef.parameters
+    );
     if (!validationResult.valid) {
       return response.status(400).json({
         type: "mcp_invocation_error",
-        error: `Parameter validation failed: ${validationResult.error}`
+        error: `Parameter validation failed: ${validationResult.error}`,
       });
     }
-    
+
     // Execute the function
     const result = await functionDef.implementation(parameters);
-    
+
     // Return the result
     response.status(200).json({
       type: "mcp_invocation_response",
       tool: tool,
       function: functionName,
-      result: result
+      result: result,
     });
   } catch (error) {
-    console.error('Error handling invocation:', error);
+    console.error("Error handling invocation:", error);
     response.status(500).json({
       type: "mcp_invocation_error",
-      error: `Internal server error: ${error.message}`
+      error: `Internal server error: ${error.message}`,
     });
   }
 }
@@ -237,13 +252,13 @@ Standardized message formats ensure compatibility between different MCP implemen
 
 ### Comparison Table
 
-| Message Type | Direction | Purpose | Key Fields |
-|----------|------|------|----------|
-| Discovery Request | LLM Host → MCP Server | Request available tools | `type: "mcp_discover"` |
-| Discovery Response | MCP Server → LLM Host | Provide tool manifest | `type: "mcp_discovery_response", manifest: {...}` |
-| Invocation Request | LLM Host → MCP Server | Execute a tool function | `type: "mcp_invoke", tool: "...", function: "...", parameters: {...}` |
-| Invocation Response | MCP Server → LLM Host | Return execution result | `type: "mcp_invocation_response", result: {...}` |
-| Error Response | MCP Server → LLM Host | Communicate errors | `type: "mcp_error", error: "...", details: {...}` |
+| Message Type        | Direction             | Purpose                 | Key Fields                                                            |
+| ------------------- | --------------------- | ----------------------- | --------------------------------------------------------------------- |
+| Discovery Request   | LLM Host → MCP Server | Request available tools | `type: "mcp_discover"`                                                |
+| Discovery Response  | MCP Server → LLM Host | Provide tool manifest   | `type: "mcp_discovery_response", manifest: {...}`                     |
+| Invocation Request  | LLM Host → MCP Server | Execute a tool function | `type: "mcp_invoke", tool: "...", function: "...", parameters: {...}` |
+| Invocation Response | MCP Server → LLM Host | Return execution result | `type: "mcp_invocation_response", result: {...}`                      |
+| Error Response      | MCP Server → LLM Host | Communicate errors      | `type: "mcp_error", error: "...", details: {...}`                     |
 
 ### Real-world Considerations
 
@@ -262,18 +277,19 @@ MCP Servers must implement appropriate security measures to protect both the ser
 ### Implementation Steps
 
 1. **Authentication**
+
    ```javascript
    // Example authentication middleware
    function authMiddleware(req, res, next) {
-     const apiKey = req.headers['x-api-key'];
-     
+     const apiKey = req.headers["x-api-key"];
+
      if (!apiKey || !validateApiKey(apiKey)) {
        return res.status(401).json({
          type: "mcp_error",
-         error: "Unauthorized access"
+         error: "Unauthorized access",
        });
      }
-     
+
      next();
    }
    ```
@@ -286,19 +302,20 @@ MCP Servers must implement appropriate security measures to protect both the ser
 
 4. **Rate Limiting**
    Protect against abuse with appropriate rate limiting:
+
    ```javascript
-   const rateLimit = require('express-rate-limit');
-   
+   const rateLimit = require("express-rate-limit");
+
    const limiter = rateLimit({
      windowMs: 15 * 60 * 1000, // 15 minutes
      max: 100, // Limit each IP to 100 requests per windowMs
      message: {
        type: "mcp_error",
-       error: "Too many requests, please try again later"
-     }
+       error: "Too many requests, please try again later",
+     },
    });
-   
-   app.use('/mcp', limiter);
+
+   app.use("/mcp", limiter);
    ```
 
 5. **Secure Configuration**
@@ -314,53 +331,55 @@ class SecureToolRegistry {
     this.tools = new Map();
     this.clientPermissions = new Map();
   }
-  
+
   registerTool(toolDefinition) {
     this.tools.set(toolDefinition.name, toolDefinition);
   }
-  
+
   registerClient(clientId, permissions) {
     this.clientPermissions.set(clientId, permissions);
   }
-  
+
   canClientAccessTool(clientId, toolName, functionName) {
     if (!this.clientPermissions.has(clientId)) {
       return false;
     }
-    
+
     const permissions = this.clientPermissions.get(clientId);
-    
+
     // Check for wildcard permission
-    if (permissions.includes('*')) {
+    if (permissions.includes("*")) {
       return true;
     }
-    
+
     // Check for tool-level permission
     if (permissions.includes(`${toolName}:*`)) {
       return true;
     }
-    
+
     // Check for specific function permission
     return permissions.includes(`${toolName}:${functionName}`);
   }
-  
+
   async executeToolFunction(clientId, toolName, functionName, parameters) {
     // Check authorization
     if (!this.canClientAccessTool(clientId, toolName, functionName)) {
-      throw new Error('Unauthorized access to tool function');
+      throw new Error("Unauthorized access to tool function");
     }
-    
+
     // Get tool and function
     const tool = this.tools.get(toolName);
     if (!tool) {
       throw new Error(`Tool '${toolName}' not found`);
     }
-    
-    const func = tool.functions.find(f => f.name === functionName);
+
+    const func = tool.functions.find((f) => f.name === functionName);
     if (!func) {
-      throw new Error(`Function '${functionName}' not found in tool '${toolName}'`);
+      throw new Error(
+        `Function '${functionName}' not found in tool '${toolName}'`
+      );
     }
-    
+
     // Execute function with parameters
     return await func.implementation(parameters);
   }
@@ -377,4 +396,4 @@ class SecureToolRegistry {
 
 ---
 
-[<- Back to Main Note](./README.md) | [Next: Integration with LLM Hosts ->](./03-llm-host-integration.md)
+[<- Back: MCP Tool Development](./01a-mcp-tool-development.md) | [Next: Integration with LLM Hosts ->](./03-mcp-llm-host-integration.md)

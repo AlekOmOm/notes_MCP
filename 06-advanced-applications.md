@@ -1,6 +1,6 @@
 # 06. Advanced Applications 🚀
 
-[<- Back to Main Note](./README.md)
+[<- Back to Best Practices ](./05-best-practices.md) | [Home: to Main Note -->](./README.md)
 
 ## Table of Contents
 
@@ -23,35 +23,35 @@ class CompositeToolBuilder {
     this.tools = [];
     this.interceptors = [];
   }
-  
+
   addTool(tool) {
     this.tools.push(tool);
     return this;
   }
-  
+
   addInterceptor(interceptor) {
     this.interceptors.push(interceptor);
     return this;
   }
-  
+
   build() {
     // Merge tool definitions
-    const functions = this.tools.flatMap(tool => 
-      tool.functions.map(fn => ({
+    const functions = this.tools.flatMap((tool) =>
+      tool.functions.map((fn) => ({
         ...fn,
         originalImplementation: fn.implementation,
         // Wrap with interceptors
-        implementation: this.wrapWithInterceptors(fn.implementation)
+        implementation: this.wrapWithInterceptors(fn.implementation),
       }))
     );
-    
+
     return {
-      name: 'composite_tool',
-      description: 'Composite tool combining multiple capabilities',
-      functions
+      name: "composite_tool",
+      description: "Composite tool combining multiple capabilities",
+      functions,
     };
   }
-  
+
   wrapWithInterceptors(implementation) {
     return async (params) => {
       // Apply pre-interceptors
@@ -61,7 +61,7 @@ class CompositeToolBuilder {
           modifiedParams = await interceptor.before(modifiedParams);
         }
       }
-      
+
       // Execute implementation
       let result;
       try {
@@ -76,14 +76,14 @@ class CompositeToolBuilder {
         }
         if (!result) throw error; // Re-throw if not handled
       }
-      
+
       // Apply post-interceptors
       for (const interceptor of this.interceptors) {
         if (interceptor.after) {
           result = await interceptor.after(result, modifiedParams);
         }
       }
-      
+
       return result;
     };
   }
@@ -101,12 +101,12 @@ class ToolDependencyManager {
     this.tools = new Map();
     this.dependencies = new Map();
   }
-  
+
   registerTool(tool) {
     this.tools.set(tool.name, tool);
     return this;
   }
-  
+
   declareDependency(toolName, dependsOn) {
     if (!this.dependencies.has(toolName)) {
       this.dependencies.set(toolName, new Set());
@@ -114,30 +114,30 @@ class ToolDependencyManager {
     this.dependencies.get(toolName).add(dependsOn);
     return this;
   }
-  
+
   getInitializationOrder() {
     const visited = new Set();
     const order = [];
-    
+
     const visit = (toolName) => {
       if (visited.has(toolName)) return;
       visited.add(toolName);
-      
+
       // Visit dependencies first
       const deps = this.dependencies.get(toolName) || new Set();
       for (const dep of deps) {
         visit(dep);
       }
-      
+
       order.push(toolName);
     };
-    
+
     // Visit all tools
     for (const toolName of this.tools.keys()) {
       visit(toolName);
     }
-    
-    return order.map(name => this.tools.get(name));
+
+    return order.map((name) => this.tools.get(name));
   }
 }
 ```
@@ -153,6 +153,7 @@ Best practices for complex tool ecosystems:
 5. **Distributed Discovery**: Enable dynamic discovery across multiple servers
 
 Key points to remember:
+
 - Complex ecosystems require careful architecture and organization
 - Maintain clean interfaces and clear responsibility boundaries
 - Consider both technical and organizational aspects of tool management
@@ -163,13 +164,13 @@ Understanding the distinction and overlap between context sources and tools help
 
 ### Comparison Table
 
-| Aspect | Context Sources | Tools | Hybrid Approaches |
-|----------|------|------|----------|
-| Primary Purpose | Provide information | Perform actions | Both |
-| Integration Model | Read-only access | Command execution | Context-aware actions |
-| LLM Interaction | Informs model responses | Extends model capabilities | Enhances model intelligence |
-| Data Flow | Generally unidirectional | Bidirectional | Complex flows |
-| Response Format | Structured knowledge | Action results | Contextual actions |
+| Aspect            | Context Sources          | Tools                      | Hybrid Approaches           |
+| ----------------- | ------------------------ | -------------------------- | --------------------------- |
+| Primary Purpose   | Provide information      | Perform actions            | Both                        |
+| Integration Model | Read-only access         | Command execution          | Context-aware actions       |
+| LLM Interaction   | Informs model responses  | Extends model capabilities | Enhances model intelligence |
+| Data Flow         | Generally unidirectional | Bidirectional              | Complex flows               |
+| Response Format   | Structured knowledge     | Action results             | Contextual actions          |
 
 ### Context Source Implementation
 
@@ -179,33 +180,43 @@ class FileSystemContextSource {
   constructor(baseDirectory) {
     this.baseDirectory = baseDirectory;
   }
-  
+
   async getContext(query) {
     // Parse the query
     const { path, type, filter } = this.parseQuery(query);
-    
+
     // Resolve path
     const resolvedPath = this.resolvePath(path);
-    
+
     // Get appropriate context
     switch (type) {
-      case 'file':
+      case "file":
         return await this.getFileContent(resolvedPath);
-      case 'directory':
+      case "directory":
         return await this.getDirectoryListing(resolvedPath, filter);
-      case 'metadata':
+      case "metadata":
         return await this.getFileMetadata(resolvedPath);
       default:
         throw new Error(`Unknown context type: ${type}`);
     }
   }
-  
+
   // Helper methods
-  parseQuery(query) { /* ... */ }
-  resolvePath(path) { /* ... */ }
-  getFileContent(path) { /* ... */ }
-  getDirectoryListing(path, filter) { /* ... */ }
-  getFileMetadata(path) { /* ... */ }
+  parseQuery(query) {
+    /* ... */
+  }
+  resolvePath(path) {
+    /* ... */
+  }
+  getFileContent(path) {
+    /* ... */
+  }
+  getDirectoryListing(path, filter) {
+    /* ... */
+  }
+  getFileMetadata(path) {
+    /* ... */
+  }
 }
 ```
 
@@ -219,92 +230,94 @@ class DatabaseConnector {
   constructor(dbConfig) {
     this.db = createDatabaseConnection(dbConfig);
   }
-  
+
   // Context source behavior
   async getContext(params) {
     const { query, tables, limit } = params;
-    
+
     // Execute query and return results as context
     const results = await this.db.query(query, { limit });
-    
+
     return {
-      type: 'database_results',
+      type: "database_results",
       tables: tables || [],
       query,
       results,
-      schema: await this.getSchemaForResults(results)
+      schema: await this.getSchemaForResults(results),
     };
   }
-  
+
   // Tool behavior
   getFunctions() {
     return [
       {
-        name: 'query_database',
-        description: 'Execute SQL query against the database',
+        name: "query_database",
+        description: "Execute SQL query against the database",
         parameters: {
-          type: 'object',
+          type: "object",
           properties: {
             query: {
-              type: 'string',
-              description: 'SQL query to execute'
+              type: "string",
+              description: "SQL query to execute",
             },
             params: {
-              type: 'object',
-              description: 'Query parameters'
-            }
+              type: "object",
+              description: "Query parameters",
+            },
           },
-          required: ['query']
+          required: ["query"],
         },
         implementation: async (params) => {
           try {
             const results = await this.db.query(params.query, params.params);
             return {
-              status: 'success',
+              status: "success",
               results,
-              rowCount: results.length
+              rowCount: results.length,
             };
           } catch (error) {
             return {
-              status: 'error',
-              message: error.message
+              status: "error",
+              message: error.message,
             };
           }
-        }
+        },
       },
       {
-        name: 'get_table_schema',
-        description: 'Get database table schema',
+        name: "get_table_schema",
+        description: "Get database table schema",
         parameters: {
-          type: 'object',
+          type: "object",
           properties: {
             table: {
-              type: 'string',
-              description: 'Table name'
-            }
+              type: "string",
+              description: "Table name",
+            },
           },
-          required: ['table']
+          required: ["table"],
         },
         implementation: async (params) => {
           try {
             const schema = await this.db.getTableSchema(params.table);
             return {
-              status: 'success',
-              schema
+              status: "success",
+              schema,
             };
           } catch (error) {
             return {
-              status: 'error',
-              message: error.message
+              status: "error",
+              message: error.message,
             };
           }
-        }
-      }
+        },
+      },
     ];
   }
-  
+
   // Helper methods
-  async getSchemaForResults(results) { /* ... */ }
+  async getSchemaForResults(results) {
+    /* ... */
+  }
 }
 ```
 
@@ -325,6 +338,7 @@ Established patterns for MCP implementation in production environments.
 ### Implementation Steps
 
 1. **Service Mesh Model**
+
    ```javascript
    // Service mesh pattern for MCP
    class MCPServiceMesh {
@@ -334,26 +348,26 @@ Established patterns for MCP implementation in production environments.
        this.loadBalancer = new LoadBalancer();
        this.circuitBreaker = new CircuitBreaker();
      }
-     
+
      registerService(name, endpoints) {
        this.services.set(name, {
          name,
          endpoints,
-         status: 'active'
+         status: "active",
        });
        this.serviceDiscovery.registerService(name, endpoints);
      }
-     
+
      async invokeService(name, method, params) {
        // Get available endpoints
        const endpoints = this.serviceDiscovery.getEndpoints(name);
        if (!endpoints || endpoints.length === 0) {
          throw new Error(`Service ${name} not found`);
        }
-       
+
        // Select endpoint using load balancer
        const endpoint = this.loadBalancer.selectEndpoint(endpoints);
-       
+
        // Use circuit breaker for resilience
        return this.circuitBreaker.execute(
          async () => {
@@ -366,24 +380,27 @@ Established patterns for MCP implementation in production environments.
            fallbackFn: async () => {
              // Try another endpoint if available
              const fallbackEndpoint = this.loadBalancer.selectEndpoint(
-               endpoints.filter(e => e !== endpoint)
+               endpoints.filter((e) => e !== endpoint)
              );
              if (fallbackEndpoint) {
                const client = await this.getClient(fallbackEndpoint);
                return client.invoke(method, params);
              }
              throw new Error(`All endpoints for ${name} are unavailable`);
-           }
+           },
          }
        );
      }
-     
-     async getClient(endpoint) { /* ... */ }
+
+     async getClient(endpoint) {
+       /* ... */
+     }
    }
    ```
 
 2. **Event-Driven Architecture**
    Implement event-driven patterns for loosely coupled components:
+
    ```javascript
    // Event-driven MCP pattern
    class EventDrivenMCP {
@@ -391,10 +408,10 @@ Established patterns for MCP implementation in production environments.
        this.eventBus = new EventBus();
        this.tools = new Map();
      }
-     
+
      registerTool(tool) {
        this.tools.set(tool.name, tool);
-       
+
        // Subscribe to relevant events
        for (const func of tool.functions) {
          if (func.events) {
@@ -405,13 +422,13 @@ Established patterns for MCP implementation in production environments.
                  this.eventBus.publish(`${event}.completed`, {
                    originalEvent: event,
                    eventData,
-                   result
+                   result,
                  });
                } catch (error) {
                  this.eventBus.publish(`${event}.failed`, {
                    originalEvent: event,
                    eventData,
-                   error: error.message
+                   error: error.message,
                  });
                }
              });
@@ -419,40 +436,41 @@ Established patterns for MCP implementation in production environments.
          }
        }
      }
-     
+
      // MCP invocation handler
      async handleInvocation(req) {
        const { tool, function: funcName, parameters } = req;
-       
+
        // Get tool
        const toolDef = this.tools.get(tool);
        if (!toolDef) {
          throw new Error(`Tool ${tool} not found`);
        }
-       
+
        // Get function
-       const func = toolDef.functions.find(f => f.name === funcName);
+       const func = toolDef.functions.find((f) => f.name === funcName);
        if (!func) {
          throw new Error(`Function ${funcName} not found in tool ${tool}`);
        }
-       
+
        // Execute function
        const result = await func.implementation(parameters);
-       
+
        // Publish event
        this.eventBus.publish(`${tool}.${funcName}.invoked`, {
          tool,
          function: funcName,
          parameters,
-         result
+         result,
        });
-       
+
        return result;
      }
    }
    ```
 
 3. **Microservices Integration**
+
    ```javascript
    // Microservices MCP integration
    class MicroservicesMCPAdapter {
@@ -460,28 +478,28 @@ Established patterns for MCP implementation in production environments.
        this.serviceRegistry = serviceRegistry;
        this.toolManifest = this.buildToolManifest();
      }
-     
+
      // Build tool manifest from available microservices
      buildToolManifest() {
        const tools = [];
-       
+
        for (const service of this.serviceRegistry.getServices()) {
          if (!service.mcpEnabled) continue;
-         
+
          // Get service schema
          const schema = service.getSchema();
-         
+
          // Create tool definition
          const tool = {
            name: service.name,
            description: service.description || `${service.name} service`,
-           functions: []
+           functions: [],
          };
-         
+
          // Add functions from service endpoints
          for (const endpoint of schema.endpoints) {
            if (!endpoint.mcpExposed) continue;
-           
+
            tool.functions.push({
              name: endpoint.name,
              description: endpoint.description || `${endpoint.name} operation`,
@@ -494,43 +512,43 @@ Established patterns for MCP implementation in production environments.
                  endpoint.name,
                  params
                );
-             }
+             },
            });
          }
-         
+
          tools.push(tool);
        }
-       
+
        return {
-         protocol_version: '1.0',
+         protocol_version: "1.0",
          server_info: {
-           name: 'Microservices MCP Gateway',
-           version: '1.0.0'
+           name: "Microservices MCP Gateway",
+           version: "1.0.0",
          },
-         tools
+         tools,
        };
      }
-     
+
      // Handle MCP discovery
      handleDiscovery() {
        return this.toolManifest;
      }
-     
+
      // Handle MCP invocation
      async handleInvocation(request) {
        const { tool, function: funcName, parameters } = request;
-       
+
        // Find tool and function
-       const toolDef = this.toolManifest.tools.find(t => t.name === tool);
+       const toolDef = this.toolManifest.tools.find((t) => t.name === tool);
        if (!toolDef) {
          throw new Error(`Tool ${tool} not found`);
        }
-       
-       const func = toolDef.functions.find(f => f.name === funcName);
+
+       const func = toolDef.functions.find((f) => f.name === funcName);
        if (!func) {
          throw new Error(`Function ${funcName} not found in tool ${tool}`);
        }
-       
+
        // Execute function
        return func.implementation(parameters);
      }
@@ -552,18 +570,20 @@ class LLMToolOrchestrator {
     this.llm = llm;
     this.toolRegistry = toolRegistry;
   }
-  
+
   async createCompositeToolPlan(userRequest) {
     // Generate tool composition plan using LLM
     const tools = this.toolRegistry.getTools();
-    const toolDescriptions = tools.map(tool => {
-      const functions = tool.functions.map(fn => 
-        `${fn.name}: ${fn.description}`
-      ).join('\n');
-      
-      return `Tool: ${tool.name}\nDescription: ${tool.description}\nFunctions:\n${functions}`;
-    }).join('\n\n');
-    
+    const toolDescriptions = tools
+      .map((tool) => {
+        const functions = tool.functions
+          .map((fn) => `${fn.name}: ${fn.description}`)
+          .join("\n");
+
+        return `Tool: ${tool.name}\nDescription: ${tool.description}\nFunctions:\n${functions}`;
+      })
+      .join("\n\n");
+
     const prompt = `
       Given the following tools:
       
@@ -575,46 +595,48 @@ class LLMToolOrchestrator {
       Generate a JSON plan for composing these tools to fulfill the request.
       The plan should include steps, each with a tool, function, and parameter mapping.
     `;
-    
+
     const response = await this.llm.complete(prompt);
     const plan = JSON.parse(response);
-    
+
     return plan;
   }
-  
+
   async executeToolPlan(plan, initialContext = {}) {
     let context = { ...initialContext };
     const results = [];
-    
+
     for (const step of plan.steps) {
       // Resolve parameters using context
       const params = this.resolveParameters(step.parameters, context);
-      
+
       // Execute tool function
       const result = await this.toolRegistry.executeTool(
         step.tool,
         step.function,
         params
       );
-      
+
       // Store result in context
-      context[step.resultKey || 'lastResult'] = result;
+      context[step.resultKey || "lastResult"] = result;
       results.push({
         step: step.name || `Step ${results.length + 1}`,
         tool: step.tool,
         function: step.function,
         parameters: params,
-        result
+        result,
       });
     }
-    
+
     return {
       context,
-      results
+      results,
     };
   }
-  
-  resolveParameters(paramSpec, context) { /* ... */ }
+
+  resolveParameters(paramSpec, context) {
+    /* ... */
+  }
 }
 ```
 
@@ -648,66 +670,77 @@ Real-world examples illustrate effective MCP implementation patterns.
 class ProductivitySuiteMCP extends MCPServer {
   constructor(options) {
     super(options);
-    
+
     // Register productivity tools
     this.registerCalendarTool();
     this.registerDocumentsTool();
     this.registerEmailTool();
     this.registerTasksTool();
   }
-  
+
   registerCalendarTool() {
     const calendarConnector = new CalendarConnector(this.options.calendarApi);
-    
+
     this.registerTool({
-      name: 'calendar',
-      description: 'Manage calendar events and appointments',
+      name: "calendar",
+      description: "Manage calendar events and appointments",
       functions: [
         {
-          name: 'create_event',
-          description: 'Create a new calendar event',
-          parameters: { /* ... */ },
-          implementation: (params) => calendarConnector.listEvents(params)
+          name: "create_event",
+          description: "Create a new calendar event",
+          parameters: {
+            /* ... */
+          },
+          implementation: (params) => calendarConnector.listEvents(params),
         },
         {
-          name: 'find_availability',
-          description: 'Find available time slots for meetings',
-          parameters: { /* ... */ },
-          implementation: (params) => calendarConnector.findAvailability(params)
-        }
-      ]
+          name: "find_availability",
+          description: "Find available time slots for meetings",
+          parameters: {
+            /* ... */
+          },
+          implementation: (params) =>
+            calendarConnector.findAvailability(params),
+        },
+      ],
     });
   }
-  
+
   registerDocumentsTool() {
     const docsConnector = new DocumentsConnector(this.options.docsApi);
-    
+
     this.registerTool({
-      name: 'documents',
-      description: 'Create and manage documents',
+      name: "documents",
+      description: "Create and manage documents",
       functions: [
         {
-          name: 'create_document',
-          description: 'Create a new document',
-          parameters: { /* ... */ },
-          implementation: (params) => docsConnector.createDocument(params)
+          name: "create_document",
+          description: "Create a new document",
+          parameters: {
+            /* ... */
+          },
+          implementation: (params) => docsConnector.createDocument(params),
         },
         {
-          name: 'edit_document',
-          description: 'Edit an existing document',
-          parameters: { /* ... */ },
-          implementation: (params) => docsConnector.editDocument(params)
+          name: "edit_document",
+          description: "Edit an existing document",
+          parameters: {
+            /* ... */
+          },
+          implementation: (params) => docsConnector.editDocument(params),
         },
         {
-          name: 'search_documents',
-          description: 'Search for documents',
-          parameters: { /* ... */ },
-          implementation: (params) => docsConnector.searchDocuments(params)
-        }
-      ]
+          name: "search_documents",
+          description: "Search for documents",
+          parameters: {
+            /* ... */
+          },
+          implementation: (params) => docsConnector.searchDocuments(params),
+        },
+      ],
     });
   }
-  
+
   // Additional tool registrations...
 }
 ```
@@ -723,93 +756,103 @@ class KnowledgeBaseMCP {
     this.db = new KnowledgeDatabase(options.dbConnection);
     this.vectorStore = new VectorStore(options.vectorStoreConfig);
     this.mcpServer = new MCPServer(options.serverConfig);
-    
+
     // Register tools
     this.registerKnowledgeTools();
   }
-  
+
   registerKnowledgeTools() {
     // Register semantic search tool
     this.mcpServer.registerTool({
-      name: 'knowledge_search',
-      description: 'Semantically search the knowledge base',
+      name: "knowledge_search",
+      description: "Semantically search the knowledge base",
       functions: [
         {
-          name: 'semantic_search',
-          description: 'Find relevant information using semantic search',
+          name: "semantic_search",
+          description: "Find relevant information using semantic search",
           parameters: {
-            type: 'object',
+            type: "object",
             properties: {
               query: {
-                type: 'string',
-                description: 'Search query'
+                type: "string",
+                description: "Search query",
               },
               limit: {
-                type: 'number',
-                description: 'Maximum number of results'
+                type: "number",
+                description: "Maximum number of results",
               },
               filters: {
-                type: 'object',
-                description: 'Optional filters to apply'
-              }
+                type: "object",
+                description: "Optional filters to apply",
+              },
             },
-            required: ['query']
+            required: ["query"],
           },
           implementation: async (params) => {
             // Generate embeddings for query
-            const embedding = await this.vectorStore.generateEmbedding(params.query);
-            
+            const embedding = await this.vectorStore.generateEmbedding(
+              params.query
+            );
+
             // Search vector store
             const results = await this.vectorStore.similaritySearch(
               embedding,
               params.limit || 5,
               params.filters
             );
-            
+
             // Fetch full documents
             const documents = await Promise.all(
-              results.map(async result => {
+              results.map(async (result) => {
                 const doc = await this.db.getDocument(result.id);
                 return {
                   ...doc,
-                  relevance: result.score
+                  relevance: result.score,
                 };
               })
             );
-            
+
             return {
-              status: 'success',
+              status: "success",
               query: params.query,
-              results: documents
+              results: documents,
             };
-          }
-        }
-      ]
+          },
+        },
+      ],
     });
-    
+
     // Register knowledge graph tool
     this.mcpServer.registerTool({
-      name: 'knowledge_graph',
-      description: 'Access and navigate the knowledge graph',
+      name: "knowledge_graph",
+      description: "Access and navigate the knowledge graph",
       functions: [
         {
-          name: 'get_related_concepts',
-          description: 'Find concepts related to a given entity',
-          parameters: { /* ... */ },
-          implementation: (params) => this.getRelatedConcepts(params)
+          name: "get_related_concepts",
+          description: "Find concepts related to a given entity",
+          parameters: {
+            /* ... */
+          },
+          implementation: (params) => this.getRelatedConcepts(params),
         },
         {
-          name: 'trace_connection',
-          description: 'Find connections between two concepts',
-          parameters: { /* ... */ },
-          implementation: (params) => this.traceConnection(params)
-        }
-      ]
+          name: "trace_connection",
+          description: "Find connections between two concepts",
+          parameters: {
+            /* ... */
+          },
+          implementation: (params) => this.traceConnection(params),
+        },
+      ],
     });
   }
-  
-  async getRelatedConcepts(params) { /* ... */ }
-  async traceConnection(params) { /* ... */ }
+
+  async getRelatedConcepts(params) {
+    /* ... */
+  }
+  async traceConnection(params) {
+    /* ... */
+  }
 }
 ```
 
@@ -822,69 +865,69 @@ class DataAnalysisMCP {
     this.dataConnectors = this.initializeDataConnectors(config.connectors);
     this.analysisEngine = new AnalysisEngine(config.engine);
     this.visualizationService = new VisualizationService(config.visualization);
-    
+
     this.mcpServer = new MCPServer(config.server);
     this.registerAnalysisTools();
   }
-  
+
   initializeDataConnectors(connectorConfigs) {
     const connectors = {};
-    
+
     for (const [name, config] of Object.entries(connectorConfigs)) {
       connectors[name] = this.createConnector(name, config);
     }
-    
+
     return connectors;
   }
-  
+
   createConnector(type, config) {
     switch (type) {
-      case 'database':
+      case "database":
         return new DatabaseConnector(config);
-      case 'api':
+      case "api":
         return new APIConnector(config);
-      case 'file':
+      case "file":
         return new FileConnector(config);
       default:
         throw new Error(`Unknown connector type: ${type}`);
     }
   }
-  
+
   registerAnalysisTools() {
     // Register data source tools
     for (const [name, connector] of Object.entries(this.dataConnectors)) {
       this.mcpServer.registerTool({
         name: `data_source_${name}`,
         description: `Access data from ${name}`,
-        functions: connector.getInterfaceFunctions()
+        functions: connector.getInterfaceFunctions(),
       });
     }
-    
+
     // Register analysis tools
     this.mcpServer.registerTool({
-      name: 'data_analysis',
-      description: 'Perform data analysis operations',
+      name: "data_analysis",
+      description: "Perform data analysis operations",
       functions: [
         {
-          name: 'run_analysis',
-          description: 'Execute an analysis operation on data',
+          name: "run_analysis",
+          description: "Execute an analysis operation on data",
           parameters: {
-            type: 'object',
+            type: "object",
             properties: {
               operation: {
-                type: 'string',
-                description: 'Analysis operation to perform'
+                type: "string",
+                description: "Analysis operation to perform",
               },
               data: {
-                type: 'object',
-                description: 'Data to analyze or source specification'
+                type: "object",
+                description: "Data to analyze or source specification",
               },
               options: {
-                type: 'object',
-                description: 'Analysis options'
-              }
+                type: "object",
+                description: "Analysis options",
+              },
             },
-            required: ['operation', 'data']
+            required: ["operation", "data"],
           },
           implementation: async (params) => {
             // Resolve data source if needed
@@ -893,65 +936,66 @@ class DataAnalysisMCP {
               const connector = this.dataConnectors[params.data.source];
               if (!connector) {
                 return {
-                  status: 'error',
-                  message: `Unknown data source: ${params.data.source}`
+                  status: "error",
+                  message: `Unknown data source: ${params.data.source}`,
                 };
               }
-              
+
               data = await connector.getData(params.data.query);
             }
-            
+
             // Run analysis
             const result = await this.analysisEngine.analyze(
               params.operation,
               data,
               params.options
             );
-            
+
             return {
-              status: 'success',
+              status: "success",
               operation: params.operation,
-              result
+              result,
             };
-          }
+          },
         },
         {
-          name: 'generate_visualization',
-          description: 'Create a visualization from data',
+          name: "generate_visualization",
+          description: "Create a visualization from data",
           parameters: {
-            type: 'object',
+            type: "object",
             properties: {
               type: {
-                type: 'string',
-                description: 'Type of visualization'
+                type: "string",
+                description: "Type of visualization",
               },
               data: {
-                type: 'object',
-                description: 'Data to visualize or analysis result'
+                type: "object",
+                description: "Data to visualize or analysis result",
               },
               options: {
-                type: 'object',
-                description: 'Visualization options'
-              }
+                type: "object",
+                description: "Visualization options",
+              },
             },
-            required: ['type', 'data']
+            required: ["type", "data"],
           },
           implementation: async (params) => {
             // Generate visualization
-            const visualization = await this.visualizationService.createVisualization(
-              params.type,
-              params.data,
-              params.options
-            );
-            
+            const visualization =
+              await this.visualizationService.createVisualization(
+                params.type,
+                params.data,
+                params.options
+              );
+
             return {
-              status: 'success',
+              status: "success",
               type: params.type,
-              visualization
+              visualization,
             };
-          }
-        }
-      ]
+          },
+        },
+      ],
     });
   }
 }
@@ -969,10 +1013,4 @@ When implementing advanced MCP applications:
 
 ---
 
-[<- Back to Main Note](./README.md)
-          implementation: (params) => calendarConnector.createEvent(params)
-        },
-        {
-          name: 'list_events',
-          description: 'List calendar events within a time range',
-          parameters: { /* ... */ },
+[<- Back to Best Practices ](./05-best-practices.md) | [Home: to Main Note -->](./README.md)

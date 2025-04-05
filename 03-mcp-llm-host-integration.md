@@ -1,6 +1,6 @@
 # 03. Integration with LLM Hosts 🔄
 
-[<- Back to Main Note](./README.md) | [Next: Markdown Note Manager Example ->](./04-markdown-note-manager.md)
+[<- Back to Server Implementation](./02-mcp-server-implementation.md) | [Next: Markdown Note Manager Example ->](./04-mcp-markdown-note-manager.md)
 
 ## Table of Contents
 
@@ -23,14 +23,20 @@ LLM Hosts typically consist of several core components:
 class LLMHost {
   constructor() {
     this.llm = new LanguageModel(); // The AI model
-    this.mcpClients = new Map();    // Connected MCP servers
-    this.conversations = new Map();  // Active conversations
+    this.mcpClients = new Map(); // Connected MCP servers
+    this.conversations = new Map(); // Active conversations
   }
-  
+
   // Core methods
-  async processUserInput(conversationId, userInput) { /* ... */ }
-  async connectToMCPServer(serverUrl, options) { /* ... */ }
-  async invokeTool(serverUrl, tool, func, params) { /* ... */ }
+  async processUserInput(conversationId, userInput) {
+    /* ... */
+  }
+  async connectToMCPServer(serverUrl, options) {
+    /* ... */
+  }
+  async invokeTool(serverUrl, tool, func, params) {
+    /* ... */
+  }
 }
 ```
 
@@ -44,6 +50,7 @@ class LLMHost {
 6. **Response Integration**: Incorporating tool results into model interactions
 
 Key points to remember:
+
 - The LLM Host mediates between the user, the language model, and external tools
 - Host applications may be desktop, web, mobile, or API-based services
 - Different hosts may implement varying levels of MCP support
@@ -60,27 +67,27 @@ async function initializeMCPConnection(serverUrl) {
   try {
     // Step 1: Establish connection
     const connection = await createConnection(serverUrl);
-    
+
     // Step 2: Send discovery request
     const discoveryResponse = await connection.sendDiscoveryRequest();
-    
+
     // Step 3: Process tool manifest
     const toolManifest = discoveryResponse.manifest;
     registerAvailableTools(toolManifest);
-    
+
     // Step 4: Update LLM system prompt with tool descriptions
     updateLLMWithToolDescriptions(toolManifest);
-    
+
     return {
-      status: 'connected',
+      status: "connected",
       serverInfo: toolManifest.server_info,
-      tools: toolManifest.tools
+      tools: toolManifest.tools,
     };
   } catch (error) {
-    console.error('Failed to initialize MCP connection:', error);
+    console.error("Failed to initialize MCP connection:", error);
     return {
-      status: 'error',
-      error: error.message
+      status: "error",
+      error: error.message,
     };
   }
 }
@@ -100,14 +107,14 @@ Ensuring compatibility requires adhering to protocol specifications and implemen
 
 ### Comparison Table
 
-| Feature | Minimum Requirement | Enhanced Support | Best Practice |
-|----------|------|------|----------|
-| Protocol Version | Support latest stable | Support multiple versions | Negotiate version on connection |
-| Authentication | API key support | OAuth or JWT tokens | Configurable auth mechanisms |
-| Tool Discovery | Basic discovery | Categorized tool listings | Dynamic discovery and updates |
-| Invocation | Basic parameter passing | Full JSON Schema validation | Structured error handling |
-| Response Processing | Simple success/error | Typed responses | Schema-validated responses |
-| Error Handling | Basic error codes | Detailed error messages | Guidance for error resolution |
+| Feature             | Minimum Requirement     | Enhanced Support            | Best Practice                   |
+| ------------------- | ----------------------- | --------------------------- | ------------------------------- |
+| Protocol Version    | Support latest stable   | Support multiple versions   | Negotiate version on connection |
+| Authentication      | API key support         | OAuth or JWT tokens         | Configurable auth mechanisms    |
+| Tool Discovery      | Basic discovery         | Categorized tool listings   | Dynamic discovery and updates   |
+| Invocation          | Basic parameter passing | Full JSON Schema validation | Structured error handling       |
+| Response Processing | Simple success/error    | Typed responses             | Schema-validated responses      |
+| Error Handling      | Basic error codes       | Detailed error messages     | Guidance for error resolution   |
 
 ### Real-world Considerations
 
@@ -126,27 +133,28 @@ Thorough testing ensures reliable integration between MCP Servers and LLM Hosts.
 ### Implementation Steps
 
 1. **Unit Testing MCP Clients**
+
    ```javascript
    // Example unit test for MCP client
-   test('should successfully discover tools', async () => {
+   test("should successfully discover tools", async () => {
      // Mock server response
-     mockServer.onGet('/discover').reply(200, {
-       type: 'mcp_discovery_response',
+     mockServer.onGet("/discover").reply(200, {
+       type: "mcp_discovery_response",
        manifest: {
-         protocol_version: '1.0',
-         server_info: { name: 'Test Server', version: '1.0.0' },
-         tools: [{ name: 'test_tool', functions: [] }]
-       }
+         protocol_version: "1.0",
+         server_info: { name: "Test Server", version: "1.0.0" },
+         tools: [{ name: "test_tool", functions: [] }],
+       },
      });
-     
+
      // Test client discovery
-     const client = new MCPClient('http://mockserver');
+     const client = new MCPClient("http://mockserver");
      const result = await client.discoverTools();
-     
+
      // Assertions
-     expect(result.status).toBe('success');
+     expect(result.status).toBe("success");
      expect(result.manifest.tools).toHaveLength(1);
-     expect(result.manifest.tools[0].name).toBe('test_tool');
+     expect(result.manifest.tools[0].name).toBe("test_tool");
    });
    ```
 
@@ -159,7 +167,8 @@ Thorough testing ensures reliable integration between MCP Servers and LLM Hosts.
 4. **Protocol Validation**
    Verify that all messages conform to the MCP specification.
 
-5. **Debugging Instrumentationn
+5. \*\*Debugging Instrumentationn
+
    ```javascript
    class DebugMCPClient extends MCPClient {
      constructor(serverUrl, options = {}) {
@@ -167,47 +176,47 @@ Thorough testing ensures reliable integration between MCP Servers and LLM Hosts.
        this.enableTracing = options.trace || false;
        this.traceLog = [];
      }
-     
+
      async sendRequest(endpoint, data) {
        if (this.enableTracing) {
          this.traceLog.push({
            timestamp: new Date(),
-           direction: 'outgoing',
+           direction: "outgoing",
            endpoint,
-           data: JSON.parse(JSON.stringify(data))
+           data: JSON.parse(JSON.stringify(data)),
          });
        }
-       
+
        try {
          const response = await super.sendRequest(endpoint, data);
-         
+
          if (this.enableTracing) {
            this.traceLog.push({
              timestamp: new Date(),
-             direction: 'incoming',
+             direction: "incoming",
              endpoint,
-             data: JSON.parse(JSON.stringify(response))
+             data: JSON.parse(JSON.stringify(response)),
            });
          }
-         
+
          return response;
        } catch (error) {
          if (this.enableTracing) {
            this.traceLog.push({
              timestamp: new Date(),
-             direction: 'error',
+             direction: "error",
              endpoint,
-             error: error.message
+             error: error.message,
            });
          }
          throw error;
        }
      }
-     
+
      getTraceLog() {
        return this.traceLog;
      }
-     
+
      clearTraceLog() {
        this.traceLog = [];
      }
@@ -226,14 +235,16 @@ Implementing tool-aware prompting to guide LLM tool selection:
 // Tool-aware prompting technique
 function generateToolAwarePrompt(toolManifest, userQuery) {
   // Extract tool descriptions
-  const toolDescriptions = toolManifest.tools.map(tool => {
-    const functions = tool.functions.map(fn => 
-      `  - ${fn.name}: ${fn.description}`
-    ).join('\n');
-    
-    return `${tool.name}: ${tool.description}\nFunctions:\n${functions}`;
-  }).join('\n\n');
-  
+  const toolDescriptions = toolManifest.tools
+    .map((tool) => {
+      const functions = tool.functions
+        .map((fn) => `  - ${fn.name}: ${fn.description}`)
+        .join("\n");
+
+      return `${tool.name}: ${tool.description}\nFunctions:\n${functions}`;
+    })
+    .join("\n\n");
+
   // Create system prompt
   return `You have access to the following tools:
   
@@ -266,4 +277,4 @@ Improving how and when LLMs decide to use tools:
 
 ---
 
-[<- Back to Main Note](./README.md) | [Next: Markdown Note Manager Example ->](./04-markdown-note-manager.md)
+[<- Back to Server Implementation](./02-mcp-server-implementation.md) | [Next: Markdown Note Manager Example ->](./04-mcp-markdown-note-manager.md)
