@@ -4,11 +4,6 @@
       "name": "mcp-installer",
       "url": "https://github.com/anaisbetts/mcp-installer",
       "description": "An MCP server that installs other MCP servers for you"
-    },
-    {
-      "name": "notes_TEMPLATE",
-      "url": "https://github.com/AlekOmOm/notes_TEMPLATE",
-      "description": "clean noting, letz goo"
     }
   ]
 }
